@@ -1,6 +1,15 @@
 //#include <avr/io.h>
 //#include <avr/interrupt.h>
 /*
+this program should work without changes in all Arduino atmega328 (16Mhz)boards.
+It is designed to control up to 8 fans that require a 25Khz pwm signal.The interface is the 
+Arduino serial monitor.It also prints the number of pulses(speed related) read from the fans.
+the serial port configuration is 9600bps and cmds end with the newline char (10).
+cmd example: "v0=100 v4=89"
+v0-v7 is the fan number and speed range is 0-107 ,but fans usually start at 20.
+it can be used to control 8 leds too.
+you can emailme for questions at octavio.vega.fernandez@gmail.com
+
 pines (avr-arduino)
  ventilador   pwm     tacometro
  v0           pc0-a0  pb0-d8  
@@ -16,7 +25,7 @@ const byte pwm_maskc=31;
 const byte pwm_maskd=28;
 const byte tac_maskb=31;
 const byte tac_maskd=128+64+32;
-const byte bit_ventilador[16]={
+const byte bit_ventilador[16]={     //pwm bit mask for individual pins on ports C-D
   1,0,2,0,4,0,8,0,16,0,0,4,0,8,0,16};
 byte tabla_pwm[108];
 byte velocidad_ventiladores[8]={
@@ -184,8 +193,8 @@ ISR(TIMER2_OVF_vect)
   static byte tac_bits=255;
   byte *mem,tac;
   mem=&tabla_pwm[0];
-  DDRC=*mem++;
-  DDRD=*mem++;
+  DDRC=*mem++; //every line of code should execute in 6 cpu clocks,and all these instructions should use 50% of cpu time. 
+  DDRD=*mem++; // 16000000(cpu clk)/25000(fan pwm)/6/2=53.33 lines,i round to 54.Since 2 ports are written, the table is 108 bytes. 
   DDRC=*mem++;
   DDRD=*mem++;
   DDRC=*mem++;
